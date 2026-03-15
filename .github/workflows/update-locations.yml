@@ -1,0 +1,61 @@
+#GitHub action workflow file in YAML, which means use spaces not tabs to indent.
+#The file tells GitHub to run the script automatically on a scheduled time.
+
+#name is what shows up in the actionas workflow tab
+name: Update Nebraska Locations
+
+#on is what makes the workflow run
+on:
+   #schedule is what loops this to work like a timer
+   schedule:
+   #cron is the format for the time: minute hour day month weekday
+      - cron: '59 23 * * 6'
+   #workflow_dispatch allows for manual trigger on GitHub website (good for testing)
+   workflow_dispatch:
+
+#A workflow has one or more jobs that run in parallel by default
+jobs:
+   update:
+      #runs-on is simply the emulator used ubunutu is used for mobile devlopment speed and lightweight nature
+      runs-on: ubuntu-latest
+
+      steps:
+         #checkout allows the script to read and write files
+         #this is the name for it though meaning it's just the label for the progress bar on GitHub during the updating locations process
+         - name: Checkout repo
+           #uses means to grab a premade action from GtiHub marketplace
+           uses: actions/checkout@v3
+
+         #installs node.js so I can run JavaScript
+         - name: Setup Node.js
+           uses: actions/setup-node@v3
+           with:
+              node-versiond: '18'
+
+         #Run update script
+         - name: Run location updater
+           run: node .github/scripts/updateLocations.js
+
+         #Commit and makes the updated changes to the CSV in GitHub, this is what actually saves the changes
+         - name: Commit updated locations
+         #|(pipes) allow one command to get extended to several lines from space-type indentions
+         #The username and email are bot identities not my own
+         #add tells GitHub to include the current locations.csv file in the change/update
+         #--staged tells diff only to look at files that are added by git add
+         #--quiet prevents text being printed to the console just states if there are no changes (0) or changes (1)
+         #||(double pipes) acts as an or operator
+         #git commit is the save command, same as hitting commit button mannually but instead the bot does it
+         #-m stands for message which is followed by the quoted message which is put into the commited message box
+         #git push puts the local data from the virtual machine to GitHub
+         
+         #diff compares new and old file
+         #Command on the Left || Command on the Right
+         #1. Left Side (git diff): No changes (code 0) or Changes (code 1)
+         #2. || Operator: Moves to right side if the left side gets code 1
+         #3. Right Side (git commit): Runs git commit
+           run: |
+              git config user.name "GitHub Actions"
+              git config user.email "actions@github.com"
+              git add locations.csv
+              git diff --staged --quiet || git commit -m "Auto-update Nebraska locations"
+              git push
