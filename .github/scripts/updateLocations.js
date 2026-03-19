@@ -33,7 +33,7 @@ const fetchJSON = (url) => {
             });
         //event listener for if there was an error like iNaturalist was down or the netowrk is having problems, if there's an error reject stops the scripts
         }).on('error', reject);
-    };
+    });
 };
 
 //If values contain commas or quotes it will be wrapped in quotes so the CSV won't break
