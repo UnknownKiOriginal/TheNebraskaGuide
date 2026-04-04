@@ -51,6 +51,58 @@ const escapeCSV = (val) => {
     return str;//The return for the strings that don't need extra quotes
 };
 
+//Uses Anthropic API to create location data that can't be gained form iNaturalist.
+const generateLocationData = (name, place) => {
+    //Promise doesn't block the code from going but has other tasks happen in the background while it completes another task
+    return new Promise((resolve, reject) => {
+        const body = JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 1000,
+            messages: [{
+                role: 'user',
+                context: `You are a Nebraska outdoor location expert. Generate structured data for this Nebraska locations: "${name}" near "${place}".
+                Respond with ONLY a valid JSON object, no extra text, no markdown, no backticks. Use this exact structure:
+                {
+                    "description_geography": "100+ word description of the geology, terrain, and landscape",
+                    "description_nature": "100+ word description of wildlife, plants, and ecosystem",
+                    "description_culture": "100+ word description of history, cultral significance, and human use",
+                    "tags": "Tag1, Tag2, Tag3, Tag4, Tag5, ... Tag30+,
+                }`
+            }];
+        });
+        //headers is what 
+        const options = {
+            //hostname is the server we're using
+            hostname: 'api.anthropic.com',
+            //path is the specific location on the server we're using
+            path: '/v1/messages',
+            //method is what's happing, for example, GET receives data but POST means we're sending data
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                //process.env read the api key from GitHub where the API key is hidden so it doens't actually appear in the code
+                'x-api-key': process.env.ANTHROPIC_API_KEY,
+                'anthropic-version': '2023-06-01',
+                //Content-Length tell the sever exactly hwo much bytes is being sent
+                'Content-Length': Buffer.byteLength(body),
+            };
+        };
+
+        //https.request is what's is sent to anthropic
+        //I simplified res from response that is recieved from anthropic
+        const req = https.request(options, (res) => {
+            let data = '';
+            //Reminder: data arrives in chunks which is why I named it chunks
+            //.on is an event listener
+            res.on('data', chunk => data += chunk);
+            //on finish and the data arrived it's pulled and extracted
+            res.on('end', () => {
+                
+            };
+        };
+    });
+};
+
 const main = async () => {
     //double underscores usually means a variable was specialy built-in
     //__dirname is a global variable made by node.js that stands for Directory Name which in this case means: __dirname = TheNebraskaGuide/.github/scripts
