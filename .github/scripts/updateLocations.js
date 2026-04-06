@@ -28,7 +28,7 @@ const fetchOverpass = (query) => {
             .replace(/ /g, '+');
         const options = {
             hostname: 'overpass-api.de',
-            path: 'api/interpreter',
+            path: '/api/interpreter',
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
