@@ -56,7 +56,7 @@ const generateLocationData = (name, place) => {
     //Promise doesn't block the code from going but has other tasks happen in the background while it completes another task
     return new Promise((resolve, reject) => {
         const body = JSON.stringify({
-            model: 'claude-sonnet-4-20250514',
+            model: 'claude-sonnet-4-5',
             max_tokens: 1000,
             messages: [{
                 role: 'user',
@@ -172,7 +172,16 @@ const main = async () => {
         if (existingNames.includes(name.toLowerCase())) continue;
 
         //.tags[] is one of the premade javascript object which apparently objects are another depiction (other language) of dicionaries (I thinking they were completely different) 
-        const address = element.tags['addr:full'] || element.tags['addr:street'] || element.tags.description
+        const address = element.tags['addr:full'] ||
+            (element.tags['addr:housenumber'] && element.tag['addr:street'] ? `${element.tags['addr:housenumber']} ${element.tags['addr:street']} ${element.tags['addr:city'] ? ', ' + element.tags['addr:city'] : ''}${element.tags['addr:state'] ? ' ' + element.tags['addr:state'] : ''}${element.tags['addr:postcode'] ? ' ' + element.tags['addr:postcode'] : ''}` : null) ||
+            (element.tags['addr:city'] && element.tags['addr:state'] ? `${element.tags['addr:city']}, ${element.tags['addr:state']}` : null) ||
+            element.tags['addr:street'] ||
+            element.tags.location ||
+            element.tags.address ||
+            element.tags.description ||
+            element.tags.note ||
+            element.tags['is_in'] ||
+            element.tags['addr:county'];
         if (!address) continue;
         //Images blank for now, I'll have to remmeber to change this later
         const image = '';
@@ -182,6 +191,8 @@ const main = async () => {
         
         //CSV rows
         newRows += `\n${escapeCSV(name)},${escapeCSV(address)},${parseFloat(lat).toFixed(4)},${parseFloat(lon).toFixed(4)},0,0,${escapeCSV(generated.tags)},${escapeCSV(generated.description_geography)},${escapeCSV(generated.description_nature)},${escapeCSV(generated.description_culture)},${escapeCSV(image)}`;
+        newRowsAdded++;
+        console.log(`Adding: ${name}`);
     }
 
     if (newRowsAdded > 0) {
