@@ -24,13 +24,13 @@ jobs:
          #this is the name for it though meaning it's just the label for the progress bar on GitHub during the updating locations process
          - name: Checkout repo
            #uses means to grab a premade action from GtiHub marketplace
-           uses: actions/checkout@v3
+           uses: actions/checkout@v4
 
          #installs node.js so I can run JavaScript
          - name: Setup Node.js
-           uses: actions/setup-node@v3
+           uses: actions/setup-node@v4
            with:
-              node-version: '18'
+              node-version: '20'
 
          #Run update script
          - name: Run location updater
