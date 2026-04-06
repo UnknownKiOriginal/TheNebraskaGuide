@@ -1,5 +1,5 @@
 //This script that runs every Saturday at 11:59PM
-//It fetches Nebraska trail/location data from iNaturalist to locations.csv if they don't already exist
+//It fetches Nebraska trail/location data from iNaturalist to Locations.csv if they don't already exist
 
 //fs is Node.js's own file system module that allows me to read and write files
 //require() loads and caches JavaScript modules
@@ -129,8 +129,8 @@ const main = async () => {
     //double underscores usually means a variable was specialy built-in
     //__dirname is a global variable made by node.js that stands for Directory Name which in this case means: __dirname = TheNebraskaGuide/.github/scripts
     //__dirname is like ./ but since I can't figure out the differences I know that in more cases when using JavaScript that __dirname is more reliable
-    //the /../../locations.csv means I'm going back two levels, back to TheNebraskaGuide folder and into the locations.csv
-    const csvPath = `${__dirname}/../../locations.csv`;
+    //the /../../Locations.csv means I'm going back two levels, back to TheNebraskaGuide folder and into the Locations.csv
+    const csvPath = `${__dirname}/../../Locations.csv`;
     //readFileSync means to Read File Synchronously which forces the computer to read every word of the file and to not stop until it's finished
     //csvPath the file .readFileSync looks at, 'utf8' is the encoding where this code is readable for human (this is a commonly used code)
     const currentCSV = fs.readFileSync(csvPath, 'utf8');
@@ -178,7 +178,7 @@ const main = async () => {
         //remember generateLocationData(name, place) was the function name made for generating the AI response
         //place_guess in the iNaturalist API is a string representing what the person who uploaded the photo thinks the location is called
         const generated = await generateLocationData(name, obs.place_guess || 'Nebraska');
-        //This adds a single long string of what will be in my locations.csv but currently is held in the newRows variable
+        //This adds a single long string of what will be in my Locations.csv but currently is held in the newRows variable
         newRows += `\n${escapeCSV(name)},${escapeCSV(obs.place_guess || 'Nebraska')},${parseFloat(lat).toFixed(4)},${parseFloat(lng).toFixed(4)},0,0,${escapeCSV(generated.tags)},${escapeCSV(generated.description_geography)},${escapeCSV(generated.description_nature)},${escapeCSV(generated.description_culture)},${escapeCSV(image)}`;
         newRowsAdded++;
         console.log(`Adding: ${name}`);
@@ -187,7 +187,7 @@ const main = async () => {
     if (newRowsAdded > 0) {
         //Adding the new rows the the Locations.csv
         fs.appendFileSync(csvPath, newRows);
-        console.log(`Added ${newRowsAdded} new locations to locations.csv`);
+        console.log(`Added ${newRowsAdded} new locations to Locations.csv`);
         } else {
         console.log('No new locations to add');
     };
