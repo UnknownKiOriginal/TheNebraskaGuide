@@ -18,6 +18,8 @@ jobs:
    update:
       #runs-on is simply the emulator used ubunutu is used for mobile devlopment speed and lightweight nature
       runs-on: ubuntu-latest
+      permissions:
+         contents: write
 
       steps:
          #checkout allows the script to read and write files
