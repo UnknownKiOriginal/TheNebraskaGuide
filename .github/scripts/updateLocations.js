@@ -101,6 +101,7 @@ const generateLocationData = (name, place) => {
                 try {
                     //parse in this case turns string to JSON object
                     const response = JSON.parse(data);
+                    console.log('API response:', JSON.stringify(response).substring(0, 200));
                     //content[0] is where Claude replies
                     const text = response.content[0].text;
                     //text format to JSON format object should be in format already but needs to be in correct file
@@ -173,7 +174,7 @@ const main = async () => {
 
         //.tags[] is one of the premade javascript object which apparently objects are another depiction (other language) of dicionaries (I thinking they were completely different) 
         const address = element.tags['addr:full'] ||
-            (element.tags['addr:housenumber'] && element.tag['addr:street'] ? `${element.tags['addr:housenumber']} ${element.tags['addr:street']} ${element.tags['addr:city'] ? ', ' + element.tags['addr:city'] : ''}${element.tags['addr:state'] ? ' ' + element.tags['addr:state'] : ''}${element.tags['addr:postcode'] ? ' ' + element.tags['addr:postcode'] : ''}` : null) ||
+            (element.tags['addr:housenumber'] && element.tags['addr:street'] ? `${element.tags['addr:housenumber']} ${element.tags['addr:street']} ${element.tags['addr:city'] ? ', ' + element.tags['addr:city'] : ''}${element.tags['addr:state'] ? ' ' + element.tags['addr:state'] : ''}${element.tags['addr:postcode'] ? ' ' + element.tags['addr:postcode'] : ''}` : null) ||
             (element.tags['addr:city'] && element.tags['addr:state'] ? `${element.tags['addr:city']}, ${element.tags['addr:state']}` : null) ||
             element.tags['addr:street'] ||
             element.tags.location ||
