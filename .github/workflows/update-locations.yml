@@ -43,7 +43,7 @@ jobs:
          - name: Commit updated locations
          #|(pipes) allow one command to get extended to several lines from space-type indentions
          #The username and email are bot identities not my own
-         #add tells GitHub to include the current locations.csv file in the change/update
+         #add tells GitHub to include the current Locations.csv file in the change/update
          #--staged tells diff only to look at files that are added by git add
          #--quiet prevents text being printed to the console just states if there are no changes (0) or changes (1)
          #||(double pipes) acts as an or operator
@@ -59,6 +59,6 @@ jobs:
            run: |
               git config user.name "GitHub Actions"
               git config user.email "actions@github.com"
-              git add locations.csv
+              git add Locations.csv
               git diff --staged --quiet || git commit -m "Auto-update Nebraska locations"
               git push
