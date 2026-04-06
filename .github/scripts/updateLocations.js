@@ -148,7 +148,7 @@ const main = async () => {
     console.log(`Currently have ${existingNames.length} locations`);
 
     //Fetching Nerbaska places from iNaturalist API, place_id=36 is Nebraska, taxon_id=47126 gives nature locations, per_page=50 fetches 50 results at once
-    const url = 'https://api.inaturalist.org/v1/observations?place_id=36&taxon_id=47126&quality_grade=research&per_page=50&order=desc&order_by=created_at';
+    const url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["leisure"~"nature_reserve|park|recreation_ground"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"~"nature_reserve|park|recreation_ground"]["name"](41.0,-104.1,43.0,-95.3);relation["leisure"~"nature_reserve|park|recreation_ground"]["name"](41.0,-104.1,43.0,-95.3););out+center;';
 
     console.log('Fetching from iNaturalist...');
     //Reminder: Doesn't move on until JSON file is fetched from the url and put into data.
@@ -157,32 +157,31 @@ const main = async () => {
     let newRowsAdded = 0;
     let newRows = '';
 
-    //Loops through each fetched iNaturalist observation
-    //data.results is a list from iNaturalist API which contain sightings/observations
-    for (const obs of data.results) {
-        //Check if sighting has GPS coordinates if it doesn't (null) then it continues on
-        if(!obs.location) continue;
-        //fills the variables with their parts and splits lat and lng up to seperate arrays
-        const [lat, lng] = obs.location.split(',');
-        //taxon is the scientific classification/category like species, genus, or family form iNaturalist API
-        //? is called optional chaining which means use this property if it exists if it doens't just use undefined so it doesn't crash
-        //? only seems to be used after taxon because of the chain rule which essentially states that a property involves its child properties so... obj.prop1?.prop2.grandchild ...prop1, 2, and grandchild are all under ?
-        //Name for trail information: Finds normal(common) name like corn, if missing then uses the Scientifc name, if that too is missing it defaults to 'Unknown';
-        const name = obs.taxon?.preferred_common_name || obs.taxon?.name || 'Unknown';
-        //This checks to see if the name from iNaturalist and the previous names match from my previously made existingNames list
+    //Now using OpenStreetMaps Overpass API so using elements instead of results
+    for (const element of data.elements) {
+        //Skipping elemetns without a name because what can be done without a proper name or something
+        if (!element.tags?.name) continue;
+        //Might be categorized or counted as something else on the app depending on the location so different locational possibiliites
+        //Reminder: ? checks if left possibility is correct before trying right option
+        const lat = element.lat || element.center?.lat;
+        const lon = element.lon || element.center?.lon;
+        //continue means to essentially continue through to the next iteration (back to finding a name)
+        if (!lat || !lon) continue;
+        
+        const name = element.tags.name;
         if (existingNames.includes(name.toLowerCase())) continue;
-        //Checks first available photo and if it is then changes shape and size to square and medium if not there it's empty ''
-        const image = obs.photos?.[0]?.url?.replace('square', 'medium') || '';
-        //calls to generate description as described above adn wait to continue on
+
+        //.tags[] is one of the premade javascript object which apparently objects are another depiction (other language) of dicionaries (I thinking they were completely different) 
+        const address = element.tags['addr:full'] || element.tags['addr:street'] || element.tags.description || continue;
+        //Images blank for now, I'll have to remmeber to change this later
+        const image = '';
+
         console.log(`Generating data for ${name}...`);
-        //remember generateLocationData(name, place) was the function name made for generating the AI response
-        //place_guess in the iNaturalist API is a string representing what the person who uploaded the photo thinks the location is called
-        const generated = await generateLocationData(name, obs.place_guess || 'Nebraska');
-        //This adds a single long string of what will be in my Locations.csv but currently is held in the newRows variable
-        newRows += `\n${escapeCSV(name)},${escapeCSV(obs.place_guess || 'Nebraska')},${parseFloat(lat).toFixed(4)},${parseFloat(lng).toFixed(4)},0,0,${escapeCSV(generated.tags)},${escapeCSV(generated.description_geography)},${escapeCSV(generated.description_nature)},${escapeCSV(generated.description_culture)},${escapeCSV(image)}`;
-        newRowsAdded++;
-        console.log(`Adding: ${name}`);
-    };
+        const generated = await generateLocationData(name, adress);
+        
+        //CSV rows
+        newRows += `\n${escapeCSV(name)},${escapeCSV(address)},${parseFloat(lat).toFixed(4)},${parseFloat(lon).toFixed(4)},0,0,${escapeCSV(generated.tags)},${escapeCSV(generated.description_geography)},${escapeCSV(generated.description_nature)},${escapeCSV(generated.description_culture)},${escapeCSV(image)}`;
+    }
 
     if (newRowsAdded > 0) {
         //Adding the new rows the the Locations.csv
