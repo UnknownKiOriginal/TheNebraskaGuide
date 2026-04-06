@@ -170,12 +170,13 @@ const main = async () => {
         const name = obs.taxon?.preferred_common_name || obs.taxon?.name || 'Unknown';
         //This checks to see if the name from iNaturalist and the previous names match from my previously made existingNames list
         if (existingNames.includes(name.toLowerCase())) continue;
-        //If iNaturalist has an observation description then use it if it doesn't then use the basic one below
-        const description = obs.description || `${name} observed in Nebraska.`;
         //Checks first available photo and if it is then changes shape and size to square and medium if not there it's empty ''
         const image = obs.photos?.[0]?.url?.replace('square', 'medium') || '';
-        //these tags are added to every location automatically
-        const tags = 'Wildlife Sighting, Nature, Nebraska';
+        //calls to generate description as described above adn wait to continue on
+        console.log(`Generating data for ${name}...`);
+        //remember generateLocationData(name, place) was the function name made for generating the AI response
+        //place_guess in the iNaturalist API is a string representing what the person who uploaded the photo thinks the location is called
+        const generated = await generateLocationData(name, obs.place_guess || 'Nebraska');
         //This adds a single long string of what will be in my locations.csv but currently is held in the newRows variable
         newRows += `\n${escapeCSV(name)},${escapeCSV(obs.place_guess || 'Nebraska')},${parseFloat(lat).toFixed(4)},${parseFloat(lng).toFixed(4)},50,70,${escapeCSV(tags)},${escapeCSV(description)},${escapeCSV(image)}`;
         newRowsAdded++;
