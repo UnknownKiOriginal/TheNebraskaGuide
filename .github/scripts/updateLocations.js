@@ -172,7 +172,8 @@ const main = async () => {
         if (existingNames.includes(name.toLowerCase())) continue;
 
         //.tags[] is one of the premade javascript object which apparently objects are another depiction (other language) of dicionaries (I thinking they were completely different) 
-        const address = element.tags['addr:full'] || element.tags['addr:street'] || element.tags.description || continue;
+        const address = element.tags['addr:full'] || element.tags['addr:street'] || element.tags.description
+        if (!address) continue;
         //Images blank for now, I'll have to remmeber to change this later
         const image = '';
 
