@@ -149,7 +149,7 @@ const main = async () => {
     console.log(`Currently have ${existingNames.length} locations`);
 
     //Fetching Nerbaska places from iNaturalist API, place_id=36 is Nebraska, taxon_id=47126 gives nature locations, per_page=50 fetches 50 results at once
-    const url = 'https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node["leisure"~"nature_reserve|park|recreation_ground"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"~"nature_reserve|park|recreation_ground"]["name"](41.0,-104.1,43.0,-95.3);relation["leisure"~"nature_reserve|park|recreation_ground"]["name"](41.0,-104.1,43.0,-95.3););out+center;';
+    const url = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent('[out:json][timeout:25];(node["leisure"~"nature_reserve|park|recreation_ground"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"~"nature_reserve|park|recreation_ground"]["name"](41.0,-104.1,43.0,-95.3);relation["leisure"~"nature_reserve|park|recreation_ground"]["name"](41.0,-104.1,43.0,-95.3););out center;');
 
     console.log('Fetching from iNaturalist...');
     //Reminder: Doesn't move on until JSON file is fetched from the url and put into data.
