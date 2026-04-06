@@ -34,6 +34,7 @@ jobs:
 
          #Run update script
          - name: Run location updater
+         #env is a temporary value for this specific instance
            env:
               ANTHROPIC_API_KEY: ${{secrets.ANTHROPIC_API_KEY}}
            run: node .github/scripts/updateLocations.js
