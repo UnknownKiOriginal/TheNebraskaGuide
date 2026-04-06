@@ -97,9 +97,30 @@ const generateLocationData = (name, place) => {
             res.on('data', chunk => data += chunk);
             //on finish and the data arrived it's pulled and extracted
             res.on('end', () => {
-                
-            };
-        };
+                try {
+                    //parse in this case turns string to JSON object
+                    const response = JSON.parse(data);
+                    //context[0] is where Claude replies
+                    const text = response.context[0].text;
+                    //text format to JSON format object should be in format already but needs to be in correct file
+                    const parsed = JSON.parse(text);
+                    //resolve was one of the above parameters
+                    resolve(parsed);
+                } catch (e) {
+                    console.log('API parse error: ', e.message);
+                    resolve({
+                        description_geography: `${name} is a natural location in Nebraska. The rest of the information could not be loaded.`,
+                        description_nature: `The area around ${name} features native Nebraska wildlife and plant life. The rest of the information could not be loaded.`,
+                        description_culture: `${name} holds significance is Nebraska's natural and cultural history. The rest of the information could not be loaded.`,
+                        tags: 'Wildlife Sightings, Nature, Nebraska, Open Space',
+                    });
+                }
+            });
+        });
+        //If network fails write body (the request we gave to Claude)
+        req.on('error', reject);
+        req.write(body);
+        req.end();
     });
 };
 
