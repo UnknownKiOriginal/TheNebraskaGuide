@@ -10,10 +10,21 @@ const https = require('https');
 const fetchOverpass = (query) => {
     //promise and async/await are the same but async/await is cleaner
     return new Promise((resolve, reject) => {
+
+        //Regex: \s (whitespace) everything within it such as \t (tabs), \n (newline), \r (carriage return)
+        //cariage return originates at the typewriter where the carriage was the silver lever that slides back and forth from beguinning to end of a line, in summary, carriage return to the beguinning of the current line
         
+        //regular expressions again (regex, / /g) more explanation below
+        //finds multiple spaces (\s), tabs, or newlines and turns them into spaces
+        //the additional + after \s means to find every consecutive piece of whitespace and treat them as a single group
         const body = `data=` + query.replace(/\s+/g, ' ').trim()
+            //replace(find a, replace with b)
+            //the following symbols have to be hidden becuause they hold a different job, like the ampersand as a variable seperator
+            //replace & with %26 (its hidden version)
             .replace(/&/g, '%26')
+            //replace + with %2B, \+ is used instead of just + because like with \s+ the plus sign looks ot find more of the previous character
             .replace(/\+/g, '%2B')
+            //turn empty spaces into plus signs
             .replace(/ /g, '+');
         const options = {
             hostname: 'overpass-api.de',
