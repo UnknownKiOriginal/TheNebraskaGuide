@@ -178,7 +178,7 @@ const main = async () => {
         const image = '';
 
         console.log(`Generating data for ${name}...`);
-        const generated = await generateLocationData(name, adress);
+        const generated = await generateLocationData(name, address);
         
         //CSV rows
         newRows += `\n${escapeCSV(name)},${escapeCSV(address)},${parseFloat(lat).toFixed(4)},${parseFloat(lon).toFixed(4)},0,0,${escapeCSV(generated.tags)},${escapeCSV(generated.description_geography)},${escapeCSV(generated.description_nature)},${escapeCSV(generated.description_culture)},${escapeCSV(image)}`;
