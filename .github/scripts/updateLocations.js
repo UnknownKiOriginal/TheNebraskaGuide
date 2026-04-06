@@ -11,7 +11,10 @@ const fetchOverpass = (query) => {
     //promise and async/await are the same but async/await is cleaner
     return new Promise((resolve, reject) => {
         
-        const body = `data = ${encodeURIComponent(query)}`;
+        const body = `data=` + query.replace(/\s+/g, ' ').trim()
+            .replace(/&/g, '%26')
+            .replace(/\+/g, '%2B')
+            .replace(/ /g, '+');
         const options = {
             hostname: 'overpass-api.de',
             path: 'api/interpreter',
@@ -20,6 +23,7 @@ const fetchOverpass = (query) => {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 //Buffer is a temporary storage in memory to hold data while being moved form one place to another so after translating from string to bytes the data does get cut apart
                 'Content-Length': Buffer.byteLength(body),
+                'User-Agent': 'TheNebraskaGuide/1.0'
             }
         };
         //https.request requests a web address which I addressed as options
@@ -164,7 +168,7 @@ const main = async () => {
     console.log(`Currently have ${existingNames.length} locations`);
 
     //Fetching Nerbaska places from OpenStreetMap Overpass API, place_id=36 is Nebraska, taxon_id=47126 gives nature locations, per_page=50 fetches 50 results at once
-    const overpassQuery = '[out:json][timeout:25];(node["leisure"~"nature_reserve|park|recreation_ground"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"~"nature_reserve|park|recreation_ground"]["name"](41.0,-104.1,43.0,-95.3);relation["leisure"~"nature_reserve|park|recreation_ground"]["name"](41.0,-104.1,43.0,-95.3););out center;';
+    const overpassQuery = '[out:json][timeout:25];(node["leisure"="park"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"="park"]["name"](41.0,-104.1,43.0,-95.3);node["leisure"="nature_reserve"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"="nature_reserve"]["name"](41.0,-104.1,43.0,-95.3););out center;';
     console.log('Fetching from OpenStreetMap Overpass...');
     //Reminder: Doesn't move on until JSON file is fetched from the url and put into data.
     const data = await fetchOverpass(overpassQuery);
