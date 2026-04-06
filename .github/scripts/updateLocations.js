@@ -1,5 +1,5 @@
 //This script that runs every Saturday at 11:59PM
-//It fetches Nebraska trail/location data from iNaturalist to Locations.csv if they don't already exist
+//It fetches Nebraska trail/location data from OpenStreetMap Overpass API to Locations.csv if they don't already exist
 
 //fs is Node.js's own file system module that allows me to read and write files
 //require() loads and caches JavaScript modules
@@ -7,16 +7,28 @@ const fs = require('fs');
 //https is Node.js's own module for making web requests
 const https = require('https');
 
-const fetchJSON = (url) => {
+const fetchOverpass = (query) => {
     //promise and async/await are the same but async/await is cleaner
     return new Promise((resolve, reject) => {
-        //https.get gets a web address which I addressed as url
-        //res (short for response) is an object that has everything the website sent back
-        https.get(url, (res) => {
+        
+        const body = `data = ${encodeURIComponent(query)}`;
+        const options = {
+            hostname: 'overpass-api.de',
+            path: 'api/interpreter',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                //Buffer is a temporary storage in memory to hold data while being moved form one place to another so after translating from string to bytes the data does get cut apart
+                'Content-Length': Buffer.byteLength(body),
+            }
+        };
+        //https.request requests a web address which I addressed as options
+        //res (short for response) is the path through which data will from the website
+        const req = https.request(options, (res) => {
             let data = '';
             //.on() is a listener for a specific event to happen then run some code
             //'data' is the premade event we are listening for, it's triggered each time a small 'chunk' of data arrives from the internet
-            //chunk is a variable name representing the small pieces of data
+            //chunk is a function name representing the small pieces of data
             //=> in this case is telling to add the values to the right of it
             //Need to use 'chunk =>' instead of 'data =>' because chunk in syntax looks like '(chunk) => {}' since it's a function so we chose chunk because data is already an assigned variable
             res.on('data', chunk => data += chunk);
@@ -26,13 +38,16 @@ const fetchJSON = (url) => {
                 try {
                     //resolve states the transfer was successfull then with JSON.parse translates the JSON file from the data variable to a JavaScript Object (variables, arrays, lists, and so on)
                     resolve(JSON.parse(data));
-                  //e is just a local variable for holding error infomration
                 } catch (e) {
+                    console.log('Overpass response preview:', data.substring(0, 200));
                     reject(e);
-                };
+                }
             });
-        //event listener for if there was an error like iNaturalist was down or the netowrk is having problems, if there's an error reject stops the scripts
-        }).on('error', reject);
+        });
+        //event listener for if there was an error like OpenStreetMap Overpass API was down or the netowrk is having problems, if there's an error reject stops the scripts
+        req.on('error', reject);
+        req.write(body);
+        req.end();
     });
 };
 
@@ -51,7 +66,7 @@ const escapeCSV = (val) => {
     return str;//The return for the strings that don't need extra quotes
 };
 
-//Uses Anthropic API to create location data that can't be gained form iNaturalist.
+//Uses Anthropic API to create location data that can't be gained form OpenStreetMap Overpass API.
 const generateLocationData = (name, place) => {
     //Promise doesn't block the code from going but has other tasks happen in the background while it completes another task
     return new Promise((resolve, reject) => {
@@ -148,12 +163,11 @@ const main = async () => {
 
     console.log(`Currently have ${existingNames.length} locations`);
 
-    //Fetching Nerbaska places from iNaturalist API, place_id=36 is Nebraska, taxon_id=47126 gives nature locations, per_page=50 fetches 50 results at once
-    const url = 'https://overpass-api.de/api/interpreter?data=' + encodeURIComponent('[out:json][timeout:25];(node["leisure"~"nature_reserve|park|recreation_ground"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"~"nature_reserve|park|recreation_ground"]["name"](41.0,-104.1,43.0,-95.3);relation["leisure"~"nature_reserve|park|recreation_ground"]["name"](41.0,-104.1,43.0,-95.3););out center;');
-
-    console.log('Fetching from iNaturalist...');
+    //Fetching Nerbaska places from OpenStreetMap Overpass API, place_id=36 is Nebraska, taxon_id=47126 gives nature locations, per_page=50 fetches 50 results at once
+    const overpassQuery = '[out:json][timeout:25];(node["leisure"~"nature_reserve|park|recreation_ground"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"~"nature_reserve|park|recreation_ground"]["name"](41.0,-104.1,43.0,-95.3);relation["leisure"~"nature_reserve|park|recreation_ground"]["name"](41.0,-104.1,43.0,-95.3););out center;';
+    console.log('Fetching from OpenStreetMap Overpass...');
     //Reminder: Doesn't move on until JSON file is fetched from the url and put into data.
-    const  data = await fetchJSON(url);
+    const data = await fetchOverpass(overpassQuery);
 
     let newRowsAdded = 0;
     let newRows = '';
