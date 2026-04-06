@@ -34,6 +34,8 @@ jobs:
 
          #Run update script
          - name: Run location updater
+           env:
+              ANTHROPIC_API_KEY: ${{secrets.ANTHROPIC_API_KEY}}
            run: node .github/scripts/updateLocations.js
 
          #Commit and makes the updated changes to the CSV in GitHub, this is what actually saves the changes
