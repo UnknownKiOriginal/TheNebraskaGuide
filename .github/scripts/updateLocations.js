@@ -29,7 +29,7 @@ const fetchOverpass = (query) => {
             //turn empty spaces into plus signs
             .replace(/ /g, '+');*/
         const options = {
-            hostname: 'overpass-api.de',
+            hostname: 'overpass.kumi.systems',
             path: '/api/interpreter',
             method: 'POST',
             headers: {
@@ -227,8 +227,22 @@ const main = async () => {
 
     //Fetching Nerbaska places from OpenStreetMap Overpass API, place_id=36 is Nebraska, taxon_id=47126 gives nature locations, per_page=50 fetches 50 results at once
     const overpassQuery = '[out:json][timeout:60];(node["leisure"="park"]["name"](40.0,-104.1,42.9,-96.0);way["leisure"="park"]["name"](40.0,-104.1,42.9,-96.0);node["leisure"="nature_reserve"]["name"](40.0,-104.1,42.9,-96.0);way["leisure"="nature_reserve"]["name"](40.0,-104.1,42.9,-96.0);node["leisure"="nature"]["name"](40.0,-104.1,42.9,-96.0);way["leisure"="nature"]["name"](40.0,-104.1,42.9,-96.0););out center;';
-    //Reminder: Doesn't move on until JSON file is fetched from the url and put into data.
-    const data = await fetchOverpass(overpassQuery);
+    //retry 3 times if necessary
+    let data;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            //Reminder: Doesn't move on until JSON file is fetched from the url and put into data.
+            data = await fetchOverpass(overpassQuery);
+            if (data.elements) break;
+            console.log(`Attempt ${attempt} returned no elements, retrying in 30 seconds...`);
+        } catch (e) {
+            console.log(`Attempt ${attempt} failed: ${e.message}`);
+            if (attempt === 3) throw e; //throw stops the script entirely unless it runs into catch (it doesn't in this case), break doesn't hard stop everything but instead leaves the loop (often because of success)
+        }
+        //30 seconds wait (30000 milliseconds)
+        //resolve is created as a function
+        await new Promise(resolve => setTimeout(resolve, 30000));
+    };
     //? operates as a safety mechanism, if elements exist use .length which will give list length if missing return undefined (in this case will rpelace undefined with 0)
     console.log(`Overpass returned ${data.elements?.length || 0} elements`);
 
