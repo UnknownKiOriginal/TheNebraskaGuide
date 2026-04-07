@@ -226,7 +226,7 @@ const main = async () => {
     console.log(`Currently have ${existingNames.length} locations`);
 
     //Fetching Nerbaska places from OpenStreetMap Overpass API, place_id=36 is Nebraska, taxon_id=47126 gives nature locations, per_page=50 fetches 50 results at once
-    const overpassQuery = '[out:json][timeout:25];(node["leisure"="park"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"="park"]["name"](41.0,-104.1,43.0,-95.3);node["leisure"="nature_reserve"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"="nature_reserve"]["name"](41.0,-104.1,43.0,-95.3););out center;';
+    const overpassQuery = '[out:json][timeout:180];(node["leisure"="park"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"="park"]["name"](41.0,-104.1,43.0,-95.3);node["leisure"="nature_reserve"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"="nature_reserve"]["name"](41.0,-104.1,43.0,-95.3););out center;';
     console.log('Fetching from OpenStreetMap Overpass...');
     //Reminder: Doesn't move on until JSON file is fetched from the url and put into data.
     const data = await fetchOverpass(overpassQuery);
