@@ -250,7 +250,37 @@ const main = async () => {
         if (!lat || !lon) continue;
         
         const name = element.tags.name;
-        const skipWords = ['golf', 'disk golf', 'fairground', 'baseball', 'softball', 'football', 'soccer', 'tennis', 'unit 1', 'unit 2', 'unit 3', 'dog park', 'skate', 'splash pad', 'swimming pool', 'arena', 'stadium', 'court'];
+        const skipWords = [
+    // Your original list
+    'recreation', 'golf', 'disk golf', 'fairground', 'baseball', 'softball', 'football', 'soccer', 'tennis', 
+    'unit 1', 'unit 2', 'unit 3', 'dog park', 'skate', 'splash pad', 'swimming pool', 'arena', 'stadium', 'court',
+
+    // Schools & Institutions (The "Frequent Flyers")
+    'school', 'elementary', 'middle school', 'high school', 'academy', 'college', 'university', 'university of',
+    'kindergarten', 'preschool', 'daycare', 'learning center', 'campus', 'dormitory', 'fraternity', 'sorority',
+    'district', 'board of education', 'alumni', 'charter', 'seminary', 'institute', 'vocational',
+
+    // Sports & Courts
+    'basketball', 'volleyball', 'pickleball', 'handball', 'racquetball', 'shuffleboard', 'horseshoes', 
+    'badminton', 'lacrosse', 'rugby', 'cricket', 'field hockey', 'track', 'velodrome', 'bmx', 'skatepark', 
+    'gymnasium', 'fitness', 'exercise station', 'weightlifting', 'batting cage', 'shooting range', 'archery',
+
+    // Water & Specific Park Features
+    'pool', 'aquatic center', 'wading pool', 'hot tub', 'sauna', 'fountain', 'water park', 'boat ramp', 
+    'marina', 'pier', 'dock', 'fishing pier', 'playground', 'swing set', 'slide', 'sandbox', 'jungle gym',
+
+    // Amenities & Infrastructure
+    'pavilion', 'gazebo', 'picnic shelter', 'restroom', 'toilet', 'drinking fountain', 'bench', 'picnic table', 
+    'barbecue', 'grill', 'fire pit', 'parking lot', 'campsite', 'rv park', 'visitor center', 'concession', 
+    'vending machine', 'utility', 'substation', 'maintenance', 'storage', 'garage',
+
+    // Entertainment & Urban
+    'amphitheater', 'bandstand', 'stage', 'cinema', 'theater', 'museum', 'zoo', 'aquarium', 'theme park', 
+    'amusement park', 'bowling', 'casino', 'ballroom', 'community center', 'youth center', 'senior center',
+    'apartment', 'condo', 'suite', 'lot', 'block', 'subdivision', 'neighborhood', 'business park', 
+    'industrial park', 'office', 'hospital', 'clinic', 'church', 'cathedral', 'mosque', 'temple', 
+    'synagogue', 'cemetery', 'graveyard'
+    //List provided by Gemini
         const nameLower = name.toLowerCase();
         if (skipWords.some(word => nameLower.includes(word))) {
             console.log(`Skipping non-trail location: ${name}`);
