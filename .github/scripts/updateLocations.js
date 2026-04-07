@@ -226,14 +226,14 @@ const main = async () => {
     console.log(`Currently have ${existingNames.length} locations`);
 
     //Fetching Nerbaska places from OpenStreetMap Overpass API, place_id=36 is Nebraska, taxon_id=47126 gives nature locations, per_page=50 fetches 50 results at once
-    const overpassQuery = '[out:json][timeout:180];(node["leisure"="park"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"="park"]["name"](41.0,-104.1,43.0,-95.3);node["leisure"="nature_reserve"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"="nature_reserve"]["name"](41.0,-104.1,43.0,-95.3););out center;';
-    console.log('Fetching from OpenStreetMap Overpass...');
+    const overpassQuery = '[out:json][timeout:60];(node["leisure"="park"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"="park"]["name"](41.0,-104.1,43.0,-95.3);node["leisure"="nature_reserve"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"="nature_reserve"]["name"](41.0,-104.1,43.0,-95.3);node["leisure"="nature"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"="nature"]["name"](41.0,-104.1,43.0,-95.3););out center;';
     //Reminder: Doesn't move on until JSON file is fetched from the url and put into data.
     const data = await fetchOverpass(overpassQuery);
     //? operates as a safety mechanism, if elements exist use .length which will give list length if missing return undefined (in this case will rpelace undefined with 0)
     console.log(`Overpass returned ${data.elements?.length || 0} elements`);
 
     let newRowsAdded = 0;
+    const MAX_NEW_LOCATIONS = 20;
     let newRows = '';
 
     //Now using OpenStreetMaps Overpass API so using elements instead of results
@@ -250,6 +250,12 @@ const main = async () => {
         if (!lat || !lon) continue;
         
         const name = element.tags.name;
+        const skipWords = ['golf', 'disk golf', 'fairground', 'baseball', 'softball', 'football', 'soccer', 'tennis', 'unit 1', 'unit 2', 'unit 3', 'dog park', 'skate', 'splash pad', 'swimming pool', 'arena', 'stadium', 'court'];
+        const nameLower = name.toLowerCase();
+        if (skipWords.some(word => nameLower.includes(word))) {
+            console.log(`Skipping non-trail location: ${name}`);
+            continue;
+        };
         if (existingNames.includes(name.toLowerCase())) continue;
 
         //.tags[] is one of the premade javascript object which apparently objects are another depiction (other language) of dicionaries (I thinking they were completely different) 
@@ -270,6 +276,7 @@ const main = async () => {
         //Images blank for now, I'll have to remmeber to change this later
         const image = '';
 
+        if (newRowsAdded >= MAX_NEW_LOCATIONS) break;
         console.log(`Generating data for ${name}...`);
         const generated = await generateLocationData(name, address);
         
