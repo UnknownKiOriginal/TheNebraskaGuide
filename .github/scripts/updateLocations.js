@@ -354,7 +354,7 @@ const main = async () => {
         //Fetching images from Wikimedia Commons using locational coordinates
         console.log(`Fetching image for ${name}...`);
         const image = await fetchWikimediaImage(lat, lon, name);
-        console.log(`Image found: ${image ? 'yes' : 'no'}`};
+        console.log(`Image found: ${image ? 'yes' : 'no'}`);
 
         if (newRowsAdded >= MAX_NEW_LOCATIONS) break;
         console.log(`Generating data for ${name}...`);
