@@ -226,7 +226,7 @@ const main = async () => {
     console.log(`Currently have ${existingNames.length} locations`);
 
     //Fetching Nerbaska places from OpenStreetMap Overpass API, place_id=36 is Nebraska, taxon_id=47126 gives nature locations, per_page=50 fetches 50 results at once
-    const overpassQuery = '[out:json][timeout:60];(node["leisure"="park"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"="park"]["name"](41.0,-104.1,43.0,-95.3);node["leisure"="nature_reserve"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"="nature_reserve"]["name"](41.0,-104.1,43.0,-95.3);node["leisure"="nature"]["name"](41.0,-104.1,43.0,-95.3);way["leisure"="nature"]["name"](41.0,-104.1,43.0,-95.3););out center;';
+    const overpassQuery = '[out:json][timeout:60];(node["leisure"="park"]["name"](40.0,-104.1,42.9,-96.0);way["leisure"="park"]["name"](40.0,-104.1,42.9,-96.0);node["leisure"="nature_reserve"]["name"](40.0,-104.1,42.9,-96.0);way["leisure"="nature_reserve"]["name"](40.0,-104.1,42.9,-96.0);node["leisure"="nature"]["name"](40.0,-104.1,42.9,-96.0);way["leisure"="nature"]["name"](40.0,-104.1,42.9,-96.0););out center;';
     //Reminder: Doesn't move on until JSON file is fetched from the url and put into data.
     const data = await fetchOverpass(overpassQuery);
     //? operates as a safety mechanism, if elements exist use .length which will give list length if missing return undefined (in this case will rpelace undefined with 0)
@@ -268,7 +268,7 @@ const main = async () => {
     'amusement park', 'bowling', 'casino', 'ballroom', 'community center', 'youth center', 'senior center',
     'apartment', 'condo', 'suite', 'lot', 'block', 'subdivision', 'neighborhood', 'business park', 
     'industrial park', 'office', 'hospital', 'clinic', 'church', 'cathedral', 'mosque', 'temple', 
-    'synagogue', 'cemetery', 'graveyard'];
+    'synagogue', 'cemetery', 'graveyard', 'shooting', 'gun range', 'rifle', 'firearm', 'sportsman', 'gun club'];
     //List provided by Gemini
         const nameLower = name.toLowerCase();
         if (skipWords.some(word => nameLower.includes(word))) {
