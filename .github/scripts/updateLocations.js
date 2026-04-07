@@ -66,6 +66,50 @@ const fetchOverpass = (query) => {
     });
 };
 
+//Using this if can't find an address
+const reverseGeocode = (lat, lon) => {
+    return new Promise((resolve) => {
+        const options = {
+            hostname: 'nominatim.openstreetmap.org',
+            path: `/reverse?format=json&lat=${lat}&lon=${lon}&zoom=16&addressdetails=1`,
+            //Remember: GET retrieves data, POST submits data
+            method: 'GET',
+            headers: {
+                'User-Agent': 'TheNebraskaGuide/1.0'
+            }
+        };
+        //https.request is what's is sent to anthropic
+        //I simplified res from response that is recieved from anthropic
+        const req = https.request(options, (res) => {
+            let data = '';
+            //Reminder: data arrives in chunks which is why I named it chunks
+            //.on is an event listener
+            res.on('data', chunk => data += chunk);
+            //on finish and the data arrived it's pulled and extracted
+            res.on('end', () => {
+                try {
+                    //parse in this case turns string to JSON object
+                    const response = JSON.parse(data);
+                    const a = response.address;
+                    //state_district is a county; hamlets, villages, towns, city are mainly fallback options in case they were inserted under that description for some reason
+                    const road = a.road || '';
+                    const city = a.city || a.town || a.village || a.hamlet || '';
+                    const state = a.state || 'Nebraska';
+                    const postcode = a.postcode || '';
+                    //Boolean will determine if a variable is missing and exclude if not present
+                    const formatted = [road, city, state, postcode].filter(Boolean).join(', ');
+                    resolve(formatted || `${city || 'Nebraska'}, Nebraska`);
+                } catch (e) {
+                    //if all else fails we have to just say it's in Nebraska
+                    resolve('Nebraska');
+                }
+            });
+        });
+        req.on('error', () => resolve('Nebraska'));
+        req.end();
+    });
+};
+
 //If values contain commas or quotes it will be wrapped in quotes so the CSV won't break
 const escapeCSV = (val) => {
     if (val === null || val === undefined) return '';
@@ -212,7 +256,10 @@ const main = async () => {
             element.tags.note ||
             element.tags['is_in'] ||
             element.tags['addr:county'];
-        if (!address) continue;
+        if (!address) {
+            console.log(`Looking up address for ${name}...`);
+            address = await reverseGeocode(lat, lon);
+        }
         //Images blank for now, I'll have to remmeber to change this later
         const image = '';
 
