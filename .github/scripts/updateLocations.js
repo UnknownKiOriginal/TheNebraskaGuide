@@ -279,7 +279,7 @@ const main = async () => {
     'amusement park', 'bowling', 'casino', 'ballroom', 'community center', 'youth center', 'senior center',
     'apartment', 'condo', 'suite', 'lot', 'block', 'subdivision', 'neighborhood', 'business park', 
     'industrial park', 'office', 'hospital', 'clinic', 'church', 'cathedral', 'mosque', 'temple', 
-    'synagogue', 'cemetery', 'graveyard'
+    'synagogue', 'cemetery', 'graveyard'];
     //List provided by Gemini
         const nameLower = name.toLowerCase();
         if (skipWords.some(word => nameLower.includes(word))) {
