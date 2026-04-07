@@ -226,7 +226,7 @@ const main = async () => {
     console.log(`Currently have ${existingNames.length} locations`);
 
     //Fetching Nerbaska places from OpenStreetMap Overpass API, place_id=36 is Nebraska, taxon_id=47126 gives nature locations, per_page=50 fetches 50 results at once
-    const overpassQuery = '[out:json][timeout:180];(node["leisure"="park"]["name"](40.0,-104.1,42.9,-96.0);way["leisure"="park"]["name"](40.0,-104.1,42.9,-96.0);node["leisure"="nature_reserve"]["name"](40.0,-104.1,42.9,-96.0);way["leisure"="nature_reserve"]["name"](40.0,-104.1,42.9,-96.0);node["leisure"="nature"]["name"](40.0,-104.1,42.9,-96.0);way["leisure"="nature"]["name"](40.0,-104.1,42.9,-96.0););out center;';
+    const overpassQuery = '[out:json][timeout:75];(node["leisure"="park"]["name"](40.0,-104.1,42.9,-96.0);way["leisure"="park"]["name"](40.0,-104.1,42.9,-96.0);node["leisure"="nature_reserve"]["name"](40.0,-104.1,42.9,-96.0);way["leisure"="nature_reserve"]["name"](40.0,-104.1,42.9,-96.0);node["leisure"="nature"]["name"](40.0,-104.1,42.9,-96.0);way["leisure"="nature"]["name"](40.0,-104.1,42.9,-96.0););out center;';
     //retry 3 times if necessary
     let data;
     for (let attempt = 1; attempt <= 3; attempt++) {
