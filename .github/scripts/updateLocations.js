@@ -227,6 +227,8 @@ const main = async () => {
     console.log('Fetching from OpenStreetMap Overpass...');
     //Reminder: Doesn't move on until JSON file is fetched from the url and put into data.
     const data = await fetchOverpass(overpassQuery);
+    //? operates as a safety mechanism, if elements exist use .length which will give list length if missing return undefined (in this case will rpelace undefined with 0)
+    console.log(`Overpass returned ${data.elements?.length || 0} elements`);
 
     let newRowsAdded = 0;
     let newRows = '';
@@ -235,6 +237,8 @@ const main = async () => {
     for (const element of data.elements) {
         //Skipping elemetns without a name because what can be done without a proper name or something
         if (!element.tags?.name) continue;
+        //? operates as a safety mechanism, if elements exist use .name to give element name if missing return undefined (in this case will rpelace undefined with unamed)
+        console.log(`Found element: ${element.tags?.name || 'unamed'}`);
         //Might be categorized or counted as something else on the app depending on the location so different locational possibiliites
         //Reminder: ? checks if left possibility is correct before trying right option
         const lat = element.lat || element.center?.lat;
