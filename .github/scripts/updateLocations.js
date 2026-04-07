@@ -29,7 +29,7 @@ const fetchOverpass = (query) => {
             //turn empty spaces into plus signs
             .replace(/ /g, '+');*/
         const options = {
-            hostname: 'overpass.kumi.systems',
+            hostname: 'overpass-api.de',
             path: '/api/interpreter',
             method: 'POST',
             headers: {
