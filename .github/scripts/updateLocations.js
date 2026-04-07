@@ -116,12 +116,10 @@ const reverseGeocode = (lat, lon) => {
 //Wikimedia Commons supposedly is a good free image API (no API key necessary)
 const fetchWikimediaImage = (lat, lon, name) => {
     return new Promise((resolve) => {
-        //gscoord is wikimedias coordinate center, gsradius is the search radius in meters
-        //gslimit is how I control what iamge we get, I can just use the first one
-        const path = `/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=10000&gslimit=5&format=json&origin=*`;
+        const searchName = encodeURIComponent(name.replace(/ /g, '_'));
         const options = {
-            hostname: 'commons.wikimedia.org',
-            path: path,
+            hostname: 'en.wikipedia.org',
+            path: `/api/rest_v1/page/summary/${searchName}`,
             method: 'GET',
             headers: {'User-Agent': 'TheNebraskaGuide/1.0'}, //keys can only use letters, numbers, and underscores so brackets are needed for hypens
         };
@@ -139,11 +137,14 @@ const fetchWikimediaImage = (lat, lon, name) => {
                     //parse in this case turns string to JSON object
                     const result = JSON.parse(data);
                     //result is lots of data from wikimedia, query is a folder, ? means if the query folder exists then it finds heosearch which is the list of images
-                    const pages = result.query?.geosearch;
+                    const pages = result.thumbnail?.source;
                     if (pages && pages.length > 0) {
                         //Get first result URL
-                        const title = pages[0].title;
-                        const imageUrl = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(title.replace('File:', ''))}?width=800`;
+                        //This regex doesn't have / /g but instead / / becuase it isn't global and so just finds the first thing to switch then stops
+                        //this \/ represents forward slash
+                        //this \d+ means any number 0-9, the plus meaning in one or more situations
+                        //px- means px-  (stands for pixel, - is important for wikimedia/wikipedia)
+                        const imageUrl = result.thumbnail.source.replace(/\/\d+px-/, '/800px-');
                         resolve(imageUrl);
                     } else {
                         resolve('');
@@ -353,7 +354,7 @@ const main = async () => {
         }
         //Fetching images from Wikimedia Commons using locational coordinates
         console.log(`Fetching image for ${name}...`);
-        const image = await fetchWikimediaImage(lat, lon, name);
+        const image = await fetchLocationImage(name);
         console.log(`Image found: ${image ? 'yes' : 'no'}`);
 
         if (newRowsAdded >= MAX_NEW_LOCATIONS) break;
