@@ -114,7 +114,7 @@ const reverseGeocode = (lat, lon) => {
 };
 
 //Wikimedia Commons supposedly is a good free image API (no API key necessary)
-const fetchWikimediaImage = (lat, lon, name) => {
+const fetchWikiImage = (lat, lon, name) => {
     return new Promise((resolve) => {
         const searchName = encodeURIComponent(name.replace(/ /g, '_'));
         const options = {
@@ -354,7 +354,7 @@ const main = async () => {
         }
         //Fetching images from Wikimedia Commons using locational coordinates
         console.log(`Fetching image for ${name}...`);
-        const image = await fetchLocationImage(name);
+        const image = await fetchWikiImage(name);
         console.log(`Image found: ${image ? 'yes' : 'no'}`);
 
         if (newRowsAdded >= MAX_NEW_LOCATIONS) break;
