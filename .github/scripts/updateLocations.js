@@ -153,7 +153,7 @@ const fetchWikimediaImage = (lat, lon, name) => {
                 }
             });
         });
-        req.on('error', () => resolve('');
+        req.on('error', () => resolve(''));
         req.end();
     });
 };
