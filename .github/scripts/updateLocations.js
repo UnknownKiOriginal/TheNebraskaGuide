@@ -246,7 +246,7 @@ const main = async () => {
         if (existingNames.includes(name.toLowerCase())) continue;
 
         //.tags[] is one of the premade javascript object which apparently objects are another depiction (other language) of dicionaries (I thinking they were completely different) 
-        const address = element.tags['addr:full'] ||
+        let address = element.tags['addr:full'] ||
             (element.tags['addr:housenumber'] && element.tags['addr:street'] ? `${element.tags['addr:housenumber']} ${element.tags['addr:street']} ${element.tags['addr:city'] ? ', ' + element.tags['addr:city'] : ''}${element.tags['addr:state'] ? ' ' + element.tags['addr:state'] : ''}${element.tags['addr:postcode'] ? ' ' + element.tags['addr:postcode'] : ''}` : null) ||
             (element.tags['addr:city'] && element.tags['addr:state'] ? `${element.tags['addr:city']}, ${element.tags['addr:state']}` : null) ||
             element.tags['addr:street'] ||
