@@ -54,6 +54,7 @@ const fetchOverpass = (query) => {
             res.on('end', () => {
                 try {
                     //resolve states the transfer was successfull then with JSON.parse translates the JSON file from the data variable to a JavaScript Object (variables, arrays, lists, and so on)
+                    console.log('Overpass raw response: ', data.substring(0, 500));
                     resolve(JSON.parse(data));
                 } catch (e) {
                     console.log('Overpass response preview:', data.substring(0, 200));
