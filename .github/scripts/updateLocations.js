@@ -36,7 +36,7 @@ const fetchOverpass = (query) => {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 //Buffer is a temporary storage in memory to hold data while being moved form one place to another so after translating from string to bytes the data does get cut apart
                 'Content-Length': Buffer.byteLength(body),
-                'User-Agent': 'TheNebraskaGuide/1.0'
+                'User-Agent': 'TheNebraskaGuide/1.0',
             }
         };
         //https.request requests a web address which I addressed as options
@@ -109,6 +109,51 @@ const reverseGeocode = (lat, lon) => {
             });
         });
         req.on('error', () => resolve('Nebraska'));
+        req.end();
+    });
+};
+
+//Wikimedia Commons supposedly is a good free image API (no API key necessary)
+const fetchWikimediaImage = (lat, lon, name) => {
+    return new Promise((resolve) => {
+        //gscoord is wikimedias coordinate center, gsradius is the search radius in meters
+        //gslimit is how I control what iamge we get, I can just use the first one
+        const path = `/w/api.php?action=query&list=geosearch&gscoord=${lat}|${lon}&gsradius=10000&gslimit=5&format=json&origin=*`;
+        const options = {
+            hostname: 'commons.wikimedia.org',
+            path: path,
+            method: 'GET',
+            headers: {'User-Agent': 'TheNebraskaGuide/1.0'}, //keys can only use letters, numbers, and underscores so brackets are needed for hypens
+        };
+        //https.request is what is sent to wikimedia
+        //I simplified res from response that is recieved from wikimedia
+        const req = https.request(options, (res) => {
+            let data = '';
+            //Reminder: data arrives in chunks which is why I named it chunks
+            //.on is an event listener
+            res.on('data', chunk => data += chunk);
+            //on finish and the data arrived it's pulled and extracted
+            
+            res.on('end', () => {
+                try {
+                    //parse in this case turns string to JSON object
+                    const result = JSON.parse(data);
+                    //result is lots of data from wikimedia, query is a folder, ? means if the query folder exists then it finds heosearch which is the list of images
+                    const pages = result.query?.geosearch;
+                    if (pages && pages.length > 0) {
+                        //Get first result URL
+                        const title = pages[0].title;
+                        const imageUrl = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(title.replace('File:', ''))}?width=800`;
+                        resolve(imageUrl);
+                    } else {
+                        resolve('');
+                    }
+                } catch (e) {
+                    resolve('');
+                }
+            });
+        });
+        req.on('error', () => resolve('');
         req.end();
     });
 };
@@ -226,7 +271,7 @@ const main = async () => {
     console.log(`Currently have ${existingNames.length} locations`);
 
     //Fetching Nerbaska places from OpenStreetMap Overpass API, place_id=36 is Nebraska, taxon_id=47126 gives nature locations, per_page=50 fetches 50 results at once
-    const overpassQuery = '[out:json][timeout:75];(node["leisure"="park"]["name"](40.0,-104.1,42.9,-96.0);way["leisure"="park"]["name"](40.0,-104.1,42.9,-96.0);node["leisure"="nature_reserve"]["name"](40.0,-104.1,42.9,-96.0);way["leisure"="nature_reserve"]["name"](40.0,-104.1,42.9,-96.0);node["leisure"="nature"]["name"](40.0,-104.1,42.9,-96.0);way["leisure"="nature"]["name"](40.0,-104.1,42.9,-96.0););out center;';
+    const overpassQuery = '[out:json][timeout:180];area["name"="Nebraska"]["admin_level"="4"]->.nebraska;(node["leisure"="park"]["name"](area.nebraska);way["leisure"="park"]["name"](area.nebraska);node["leisure"="nature_reserve"]["name"](area.nebraska);way["leisure"="nature_reserve"]["name"](area.nebraska);node["leisure"="nature"]["name"](area.nebraska);way["leisure"="nature"]["name"](area.nebraska););out center;';
     //retry 3 times if necessary
     let data;
     for (let attempt = 1; attempt <= 3; attempt++) {
@@ -306,8 +351,10 @@ const main = async () => {
             console.log(`Looking up address for ${name}...`);
             address = await reverseGeocode(lat, lon);
         }
-        //Images blank for now, I'll have to remmeber to change this later
-        const image = '';
+        //Fetching images from Wikimedia Commons using locational coordinates
+        console.log(`Fetching image for ${name}...`);
+        const image = await fetchWikimediaImage(lat, lon, name);
+        console.log(`Image found: ${image ? 'yes' : 'no'}`};
 
         if (newRowsAdded >= MAX_NEW_LOCATIONS) break;
         console.log(`Generating data for ${name}...`);
