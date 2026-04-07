@@ -17,7 +17,9 @@ const fetchOverpass = (query) => {
         //regular expressions again (regex, / /g) more explanation below
         //finds multiple spaces (\s), tabs, or newlines and turns them into spaces
         //the additional + after \s means to find every consecutive piece of whitespace and treat them as a single group
-        const body = `data=` + query.replace(/\s+/g, ' ').trim()
+        
+        const body = `data=${encodeURIComponent(query)}`;
+        /*const body = `data=` + query.replace(/\s+/g, ' ').trim()
             //replace(find a, replace with b)
             //the following symbols have to be hidden becuause they hold a different job, like the ampersand as a variable seperator
             //replace & with %26 (its hidden version)
@@ -25,7 +27,7 @@ const fetchOverpass = (query) => {
             //replace + with %2B, \+ is used instead of just + because like with \s+ the plus sign looks ot find more of the previous character
             .replace(/\+/g, '%2B')
             //turn empty spaces into plus signs
-            .replace(/ /g, '+');
+            .replace(/ /g, '+');*/
         const options = {
             hostname: 'overpass-api.de',
             path: '/api/interpreter',
