@@ -226,7 +226,7 @@ const generateLocationData = (name, place) => {
                     const response = JSON.parse(data);
                     console.log('API response:', JSON.stringify(response).substring(0, 200));
                     //content[0] is where Claude replies
-                    const text = response.content[0].text;
+                    const text = response.content[0].text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
                     //text format to JSON format object should be in format already but needs to be in correct file
                     const parsed = JSON.parse(text);
                     //resolve was one of the above parameters
