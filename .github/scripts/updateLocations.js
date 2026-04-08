@@ -233,12 +233,7 @@ const generateLocationData = (name, place) => {
                     resolve(parsed);
                 } catch (e) {
                     console.log('API parse error: ', e.message);
-                    resolve({
-                        description_geography: `${name} is a natural location in Nebraska. The rest of the information could not be loaded.`,
-                        description_nature: `The area around ${name} features native Nebraska wildlife and plant life. The rest of the information could not be loaded.`,
-                        description_culture: `${name} holds significance is Nebraska's natural and cultural history. The rest of the information could not be loaded.`,
-                        tags: 'Wildlife Sightings, Nature, Nebraska, Open Space',
-                    });
+                    resolve(null);
                 }
             });
         });
@@ -360,6 +355,11 @@ const main = async () => {
         if (newRowsAdded >= MAX_NEW_LOCATIONS) break;
         console.log(`Generating data for ${name}...`);
         const generated = await generateLocationData(name, address);
+
+        if (!generated) {
+            console.log(`Skipping ${name} -- generation failed`);
+            continue;
+        };
         
         //CSV rows
         newRows += `\n${escapeCSV(name)},${escapeCSV(address)},${parseFloat(lat).toFixed(4)},${parseFloat(lon).toFixed(4)},0,0,${escapeCSV(generated.tags)},${escapeCSV(generated.description_geography)},${escapeCSV(generated.description_nature)},${escapeCSV(generated.description_culture)},${escapeCSV(image)}`;
