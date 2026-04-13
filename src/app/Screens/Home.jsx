@@ -50,7 +50,15 @@ const ReadinessCircle = ({percentage, label, color}) => {
 export const Home = ({navigation}) => {
    //useState (memory), useEffect (lifecycle/timing), useContext (global data)
    //Remember, hooks must be called within the used function
-   const {communityPosts} = useContext(AppContext);
+   const {communityPosts, heightCm, weightKg, getSatisfaction} = useContext(AppContext);
+
+   // Same BMI formula as Locations screen
+   const difficultyPercent = (() => {
+      if (!heightCm || !weightKg) return 0;
+      const heightM = heightCm / 100;
+      const bmi = weightKg / (heightM * heightM);
+      return Math.min(100, Math.max(0, Math.round(((bmi - 15) / 25) * 100)));
+   })();
    const {locations, loading} = useLocations();
    const [searchText, setSearchText] = useState('');//Reminder: searchText is a variable, setSearchText refreshes (rewrites) the value
    const [selectedTags, setSelectedTags] = useState([]);
@@ -231,8 +239,8 @@ export const Home = ({navigation}) => {
                            {/*<Text style = {styles.starRating}>★10}</Text>*/}
                         </View>
                         <View style = {styles.progressCircle}>
-                           <ReadinessCircle percentage = {location.satisfaction} label = {location.satisfaction + '%'} color = '#01a598'/>
-                           <ReadinessCircle percentage = {location.difficulty} label = 'Diff' color = '#FFD700'/>
+                           <ReadinessCircle percentage = {getSatisfaction(location.name)} label = {getSatisfaction(location.name) + '%'} color = '#01a598'/>
+                           <ReadinessCircle percentage = {difficultyPercent} label = 'Diff' color = '#FFD700'/>
                         </View>
                      </View>
                   </Pressable>

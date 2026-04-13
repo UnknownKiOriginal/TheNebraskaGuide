@@ -59,7 +59,15 @@ const getWeatherIcon = (code) => {
 };
 
 export const Locations = ({navigation, route}) => {
-   const {communityPosts, setCommunityPosts, favorites = [], addFavorites, removeFavorites} = useContext(AppContext);
+   const {communityPosts, setCommunityPosts, favorites = [], addFavorites, removeFavorites, submitRating, getSatisfaction, getUserRating, userName, heightCm, weightKg} = useContext(AppContext);
+
+   // BMI-based difficulty: clamp(((BMI - 15) / 25) * 100, 0, 100)
+   const difficultyPercent = (() => {
+      if (!heightCm || !weightKg) return 0;
+      const heightM = heightCm / 100;
+      const bmi = weightKg / (heightM * heightM);
+      return Math.min(100, Math.max(0, Math.round(((bmi - 15) / 25) * 100)));
+   })();
 
    //route.params.location reprents full location object with all detailed information
    //? is often used with something else but by default if ? is just used and no location was passed through it would be undefined
@@ -70,8 +78,9 @@ export const Locations = ({navigation, route}) => {
 
    //modalVisible controls whether the 'Add Picture' popup is shown or hidden
    const [modalVisible, setModalVisible] = useState(false);
-   //userRating stores the given rating as the text input
-   const [userRating, setUserRating] = useState('');
+   //userRating pre-fills with the user's existing rating if they've rated before
+   const existingRating = getUserRating(location?.name);
+   const [userRating, setUserRating] = useState(existingRating !== null ? String(existingRating) : '');
    //showAllTags determines if the characteristics are in full list mode
    const [showAllTags, setShowAllTags] = useState(false);
    //dropdownOpen determines whether the comment template dropdown is up
@@ -140,15 +149,42 @@ export const Locations = ({navigation, route}) => {
                      </Text>
                      <View style = {{flexDirection: 'row', alignItems: 'center', marginTop: 4}}>
                         <Text style = {styles.ratingLabel}>Given Rating: </Text>
-                        <TextInput style = {styles.ratingInput} placeholder = '__' placeholderTextColor = '#aaa' keyboardType = 'numeric' maxLength = {2} value = {userRating} onChangeText = {setUserRating}/>
+                        <TextInput
+                           style = {styles.ratingInput}
+                           placeholder = '__'
+                           placeholderTextColor = '#aaa'
+                           keyboardType = 'numeric'
+                           maxLength = {2}
+                           value = {userRating}
+                           onChangeText = {setUserRating}
+                           onEndEditing = {() => {
+                              const trimmed = userRating.trim();
+                              if (trimmed === '') {
+                                 // Blank = remove rating
+                                 submitRating(location?.name, null);
+                              } else {
+                                 const val = parseInt(trimmed, 10);
+                                 if (!isNaN(val) && val >= 0 && val <= 10) {
+                                    submitRating(location?.name, val);
+                                 } else {
+                                    // Invalid — snap back to saved value
+                                    const prev = getUserRating(location?.name);
+                                    setUserRating(prev !== null ? String(prev) : '');
+                                 }
+                              }
+                           }}
+                        />
                         <Text style = {styles.ratingLabel}>/10</Text>
+                        {getUserRating(location?.name) !== null && (
+                           <Text style = {styles.ratingSubmittedText}> ✓ </Text>
+                        )}
                      </View>
                   </View>
 
                   {/*PROGRESS CIRCLES*/}
                   <View style = {{flexDirection: 'row', gap: 8}}>
-                     <ProgCircle percentage = {location?.satisfaction} label = 'Satisfaction' color = '#01a598'/>
-                     <ProgCircle percentage = {location?.difficulty} label = 'Difficulty' color = '#FFD700'/>
+                     <ProgCircle percentage = {getSatisfaction(location?.name)} label = 'Satisfaction' color = '#01a598'/>
+                     <ProgCircle percentage = {difficultyPercent} label = 'Difficulty' color = '#FFD700'/>
                   </View>
                </View>
             </View>
@@ -244,24 +280,6 @@ export const Locations = ({navigation, route}) => {
                <Text style = {styles.bodyText}>{location?.description_nature}</Text>
                <Text style = {styles.subHeading}>Culture & History</Text>
                <Text style = {styles.bodyText}>{location?.description_culture}</Text>
-            </View>
-
-            {/*VITRUAL TOUR*/}
-            <View style = {styles.section}>
-               <Text style = {styles.sectionTitle}>Virtual Tour</Text>
-               <View style = {styles.tourBox}>
-                  <Image
-                     style = {styles.tourImage}
-                     source = {
-                     communityPosts[location?.name]?.[0]?.uri
-                     ? {uri: communityPosts[location?.name][0].uri} : location?.image
-                     ? {uri: location.image} : require('../assets/images/placeholder.jpg')
-                     }
-                  />
-                  <Pressable style = {styles.tourPlayBtn}>
-                     <Ionicons name = 'play-circle' size = {52} color = '#fff'/>
-                  </Pressable>
-               </View>
             </View>
 
             {/*COMMUNITY PICTURES*/}
@@ -383,30 +401,21 @@ export const Locations = ({navigation, route}) => {
                      </View>
                   </View>
                   <Pressable style = {styles.finishBtn} onPress = {() => {
-                     {/*Notes is what the user typed in the extra description portion*/}
-                     if (pickedImage) {
-                        console.log('Saving post for:', location.name, 'image: ', pickedImage);
-                        //(Parameter) => {Body/Instructions/Logic}
-                        setCommunityPosts(prev => ({//=> signals start of function, prev is just parameter name
-                           ...prev,//... is the new object being added to the CommunityPosts array
-                           //[] means the value of the variable is the property name, without brackets it would look for file name
-                           //the colon means a brand new array is being made
-                           //the ellipsis means takes every individual part of the old list and put in in the new list
-                           //prev[location.name] is looking at existing posts
-                           //if there's already photos then use it, if not use the empty array
+                     if (pickedImage || notes.trim()) {
+                        setCommunityPosts(prev => ({
+                           ...prev,
                            [location.name]: [...(prev[location.name] || []), {
-                           id: Date.now(),//Uses current time in milliseconds (like 1710892400123) as identification number
-                           user: 'TisYourUsername',
-                           info: notes,
-                           date: new Date().toLocaleDateString(),
-                           uri: pickedImage || '',
-                        }]
-                     }));
-                  }
-                  //clearing notes sets it up for next time it's used
-                  setNotes('');
-                  setPickedImage(null);
-                  setModalVisible(false);
+                              id: Date.now(),
+                              user: userName,
+                              info: notes,
+                              date: new Date().toLocaleDateString(),
+                              uri: pickedImage || '',
+                           }],
+                        }));
+                     }
+                     setNotes('');
+                     setPickedImage(null);
+                     setModalVisible(false);
                   }}>
                      <Text style = {styles.finishText}>Finish</Text>
                   </Pressable>
@@ -488,6 +497,12 @@ const styles = StyleSheet.create({
       textAlign: 'center',//Decides if the text starts on the left, center, or right.
       fontSize: 13,
       color: '#333'
+   },
+   ratingSubmittedText: {
+      marginLeft: 4,
+      fontSize: 16,
+      color: '#01a598',
+      fontWeight: 'bold',
    },
    circleBase: {
       width: 80,
@@ -599,22 +614,6 @@ const styles = StyleSheet.create({
    weatherLows: {
       color: 'rgba(255,255,255,0.65)',
       fontSize: 11
-   },
-   tourBox: {
-      borderRadius: 12,
-      overflow: 'hidden',
-      height: 180
-   },
-   tourImage: {
-      width: '100%',
-      height: '100%'
-   },
-   tourPlayBtn: {
-      position: 'absolute',
-      top: '50%',
-      left: '50%',
-      marginTop: -26,
-      marginLeft: -26
    },
    addPhotoBox: {
       height: 110,

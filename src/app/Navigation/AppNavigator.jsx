@@ -21,9 +21,9 @@ import {Reset_Password} from '../Screens/Reset_Password.jsx';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 const HomeStack = createNativeStackNavigator();
+const AuthStack = createNativeStackNavigator();
 
 const HomeStackScreen = () => {
-
 	return (
 		<HomeStack.Navigator screenOptions = {{headerShown: false}}>
 			<HomeStack.Screen name = 'HomeMain' component = {Home}/>
@@ -50,66 +50,71 @@ const TopBanner = ({logout}) => {
 	);
 };
 
+// Tabs are extracted here so AuthStack can wrap them alongside Forgot/Reset screens
+const TabScreen = () => {
+	const {logout} = useContext(AppContext);
+	return (
+		<Tab.Navigator
+			screenOptions = {({route}) => ({
+				header: () => <TopBanner logout = {logout}/>,
+				tabBarShowLabel: false,
+				tabBarStyle: {
+					backgroundColor: '#01a598',
+					height: 60,
+					position: 'absolute',
+					bottom: 0,
+					elevation: 0,
+				},
+				tabBarIcon: ({focused}) => {
+					let iconName;
+					if (route.name === 'HomeTab') iconName = focused ? 'home' : 'home-outline';
+					if (route.name === 'Favorites') iconName = focused ? 'heart' : 'heart-outline';
+					if (route.name === 'Settings') iconName = focused ? 'settings' : 'settings-outline';
+					if (route.name === 'About_Us') iconName = focused ? 'information-circle' : 'information-circle-outline';
+					if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
+					return (
+						<View style = {styles.iconContainer}>
+							<Ionicons name = {iconName} size = {32} color = 'black'/>
+						</View>
+					);
+				},
+			})}>
+			<Tab.Screen name = "HomeTab" component = {HomeStackScreen}/>
+			<Tab.Screen name = "Favorites" component = {Favorites}/>
+			<Tab.Screen name = "Settings" component = {Settings}/>
+			<Tab.Screen name = "About_Us" component = {About_Us}/>
+			<Tab.Screen name = "Profile" component = {Profile}/>
+		</Tab.Navigator>
+	);
+};
+
+// AuthStack wraps the tabs so ALL authenticated screens — including Profile — can
+// navigate to Forgot_Password and Reset_Password via navigation.navigate()
+const AuthStackScreen = () => {
+	return (
+		<AuthStack.Navigator screenOptions = {{headerShown: false}}>
+			<AuthStack.Screen name = "Main" component = {TabScreen}/>
+			<AuthStack.Screen name = "Forgot_Password" component = {Forgot_Password}/>
+			<AuthStack.Screen name = "Reset_Password" component = {Reset_Password}/>
+		</AuthStack.Navigator>
+	);
+};
+
 export const AppNavigator = () => {
 
-	const {isLoggedIn, logout} = useContext(AppContext);//useContext searches for AppContext.jsx then looks for isLoggedIn
+	const {isLoggedIn, isGuest} = useContext(AppContext);
 
 	return (
-		<NavigationContainer>{/*Keeps tracks of the screen, knows when they're visible and their hostory too*/}
-			{isLoggedIn ? (//If isLoggedIn is true it activates this first section		  
-				<Tab.Navigator
-					//Route is the identification of the screen
-					screenOptions = {({route}) => ({//screenOptions moves from HTML to JavaScript
-						header: () => <TopBanner logout = {logout}/>,
-						tabBarShowLabel: false,
-						tabBarStyle: {
-							backgroundColor: '#01a598',
-							height: 60,
-							position: 'absolute',//On top of everything (may need to remove if looks weird on real device)
-							bottom: 0,
-							elevation: 0,//Removes shadow on android
-						},
-						tabBarIcon: ({focused}) => {//focused is a boolean, true when on a screen and false when not on a screen
-							let iconName;//Left blank so can be changed later
-					  
-							//=== means exactly equal to (compared to == which means it can accept a different type of varaible as long as the value is the same (0 == '0'))
-							//In this situation (?) means 'if yes' and (:) means 'if no'
-							//Ternary Operator format... condition ? result_if_true : result_if_false;
-							/*In this case the ternary operator would equate to this...
-							if (route.name === 'HomeTab') {
-								if (focused === true) {
-									iconName = 'home';
-								} else {
-									iconName = 'home-outline';
-								}
-							}*/
-							if (route.name === 'HomeTab') iconName = focused ? 'home' : 'home-outline';
-							if (route.name === 'Favorites') iconName = focused ? 'heart' : 'heart-outline';
-							if (route.name === 'Settings') iconName = focused ? 'settings' : 'settings-outline';
-							if (route.name === 'About_Us') iconName = focused ? 'information-circle' : 'information-circle-outline';
-							if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
-
-							return (
-								<View style = {styles.iconContainer}>
-									<Ionicons name = {iconName} size = {32} color = 'black'/>
-								</View>
-							);
-						},
-					})}>
-
-					<Tab.Screen name = "HomeTab" component = {HomeStackScreen}/>
-					<Tab.Screen name = "Favorites" component = {Favorites}/>
-					<Tab.Screen name = "Settings" component = {Settings}/>
-					<Tab.Screen name = "About_Us" component = {About_Us}/>
-			   	<Tab.Screen name = "Profile" component = {Profile}/>
-				</Tab.Navigator>//Tab.Navigator is like switching between two completely different screens
-			) : (//If isLoggedIn is false it activates this second section
+		<NavigationContainer>
+			{isLoggedIn || isGuest ? (
+				<AuthStackScreen/>
+			) : (
 				<Stack.Navigator screenOptions = {{headerShown: false}}>
 					<Stack.Screen name = "Login" component = {Login}/>
 					<Stack.Screen name = "Register" component = {Register}/>
-               <Stack.Screen name = "Reset_Password" component = {Reset_Password}/>
-               <Stack.Screen name = "Forgot_Password" component = {Forgot_Password}/>
-				</Stack.Navigator>//Stack.Navigator is like moving from settings to a specific setting and then being able to back out of it
+					<Stack.Screen name = "Reset_Password" component = {Reset_Password}/>
+					<Stack.Screen name = "Forgot_Password" component = {Forgot_Password}/>
+				</Stack.Navigator>
 			)}
 		</NavigationContainer>
 	);

@@ -3,13 +3,70 @@ import React, {useContext, useState} from 'react';
 import {Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View} from 'react-native';
 import {AppContext} from '../Context/AppContext';
 
+// Convert stored cm to display string
+const cmToDisplay = (cm, units) => {
+   if (cm === null) return '';
+   if (units === 'imperial') {
+      const totalInches = cm / 2.54;
+      const feet = Math.floor(totalInches / 12);
+      const inches = Math.round(totalInches % 12);
+      return `${feet}'${inches}"`;
+   }
+   return String(Math.round(cm));
+};
+
+// Convert stored kg to display string
+const kgToDisplay = (kg, units) => {
+   if (kg === null) return '';
+   if (units === 'imperial') return String(Math.round(kg * 2.20462));
+   return String(Math.round(kg));
+};
+
+// Parse imperial height string like 5'11" into cm
+const imperialHeightToCm = (str) => {
+   const match = str.match(/(\d+)'(\d*)"?/);
+   if (!match) return null;
+   const feet = parseInt(match[1], 10);
+   const inches = parseInt(match[2] || '0', 10);
+   return (feet * 12 + inches) * 2.54;
+};
+
 export const Settings = () => {
-   const {userName, logout} = useContext(AppContext);
+   const {userName, logout, heightCm, weightKg, units, setHeightCm, setWeightKg, setUnits} = useContext(AppContext);
    const [darkMode, setDarkMode] = useState(false);
    const [notifications, setNotifications] = useState(true);
-   const [units, setUnits] = useState('imperial');
-   const [height, setHeight] = useState('');
-   const [weight, setWeight] = useState('');
+
+   // Local display strings — kept in sync with AppContext base values
+   const [heightText, setHeightText] = useState(() => cmToDisplay(heightCm, units));
+   const [weightText, setWeightText] = useState(() => kgToDisplay(weightKg, units));
+
+   const handleUnitSwitch = (newUnits) => {
+      if (newUnits === units) return;
+      setUnits(newUnits);
+      // Convert displayed values to new unit display
+      setHeightText(cmToDisplay(heightCm, newUnits));
+      setWeightText(kgToDisplay(weightKg, newUnits));
+   };
+
+   const saveHeight = (text) => {
+      if (!text.trim()) { setHeightCm(null); return; }
+      let cm;
+      if (units === 'imperial') {
+         cm = imperialHeightToCm(text);
+      } else {
+         cm = parseFloat(text);
+         if (isNaN(cm)) cm = null;
+      }
+      setHeightCm(cm);
+   };
+
+   const saveWeight = (text) => {
+      if (!text.trim()) { setWeightKg(null); return; }
+      const num = parseFloat(text);
+      if (isNaN(num)) { setWeightKg(null); return; }
+      const kg = units === 'imperial' ? num / 2.20462 : num;
+      setWeightKg(kg);
+   };
 
    return (
       <ScrollView style = {styles.container} contentContainerStyle = {{paddingBottom: 100}}>
@@ -38,7 +95,6 @@ export const Settings = () => {
                <Switch
                   value = {darkMode}
                   onValueChange = {setDarkMode}
-                  /*Track is the pill color of the slide icon, not the circle part (thumb) above the pill*/
                   trackColor = {{false: '#ddd', true: '#01a598'}}
                   thumbColor = '#fff'
                />
@@ -61,13 +117,13 @@ export const Settings = () => {
                <View style = {styles.unitToggle}>
                   <Pressable
                      style = {[styles.unitBtn, units === 'imperial' && styles.unitBtnActive]}
-                     onPress = {() => setUnits('imperial')}
+                     onPress = {() => handleUnitSwitch('imperial')}
                   >
                      <Text style = {[styles.unitBtnText, units === 'imperial' && styles.unitBtnTextActive]}>Imperial</Text>
                   </Pressable>
                   <Pressable
                      style = {[styles.unitBtn, units === 'metric' && styles.unitBtnActive]}
-                     onPress = {() => setUnits('metric')}
+                     onPress = {() => handleUnitSwitch('metric')}
                   >
                      <Text style = {[styles.unitBtnText, units === 'metric' && styles.unitBtnTextActive]}>Metric</Text>
                   </Pressable>
@@ -77,18 +133,20 @@ export const Settings = () => {
 
          {/*DIFFICULTY GAUGE SECTION*/}
          <Text style = {styles.sectionHeader}>Difficulty Gauge</Text>
-         <Text style = {styles.sectionSubtitle}>Height</Text>
+         <Text style = {styles.sectionSubtitle}>Used to personalise trail difficulty based on your body metrics</Text>
          <View style = {styles.card}>
             <View style = {styles.row}>
                <Ionicons name = 'body-outline' size = {22} color = '#01a598'/>
                <Text style = {styles.rowLabel}>Height</Text>
                <TextInput
                   style = {styles.inlineInput}
-                  placeholder = {units === 'imperial' ? 'e.g. 5\'11"' : 'e.g. 180 cm'}
+                  placeholder = {units === 'imperial' ? "e.g. 5'11\"" : 'e.g. 180'}
                   placeholderTextColor = '#bbb'
-                  value = {height}
-                  onChangeText = {setHeight}
+                  value = {heightText}
+                  onChangeText = {setHeightText}
+                  onEndEditing = {() => saveHeight(heightText)}
                />
+               <Text style = {styles.unitLabel}>{units === 'imperial' ? '' : 'cm'}</Text>
             </View>
             <View style = {styles.divider}/>
             <View style = {styles.row}>
@@ -96,12 +154,14 @@ export const Settings = () => {
                <Text style = {styles.rowLabel}>Weight</Text>
                <TextInput
                   style = {styles.inlineInput}
-                  placeholder = {units === 'imperial' ? 'e.g. 160 lbs' : 'e.g. 75 kg'}
+                  placeholder = {units === 'imperial' ? 'e.g. 160' : 'e.g. 75'}
                   placeholderTextColor = '#bbb'
-                  value = {weight}
-                  onChangeText = {setWeight}
+                  value = {weightText}
+                  onChangeText = {setWeightText}
+                  onEndEditing = {() => saveWeight(weightText)}
                   keyboardType = 'numeric'
                />
+               <Text style = {styles.unitLabel}>{units === 'imperial' ? 'lbs' : 'kg'}</Text>
             </View>
          </View>
 
@@ -190,7 +250,7 @@ const styles = StyleSheet.create({
       backgroundColor: '#fff',
    },
    unitBtnActive: {
-      backgroundColor: '#01a598'
+      backgroundColor: '#01a598',
    },
    unitBtnText: {
       fontSize: 13,
@@ -204,6 +264,11 @@ const styles = StyleSheet.create({
       fontSize: 14,
       color: '#333',
       textAlign: 'right',
-      minWidth: 100,
+      minWidth: 80,
    },
-})
+   unitLabel: {
+      fontSize: 13,
+      color: '#888',
+      width: 28,
+   },
+});
